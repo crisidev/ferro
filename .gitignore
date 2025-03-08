@@ -5,3 +5,4 @@ target/
 .bacon-locations
 tarpaulin-report.html
 result
+.direnv
