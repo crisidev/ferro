@@ -1,0 +1,15 @@
+[package]
+name = "ferro"
+version = "0.1.0"
+edition = "2021"
+authors = ["Matteo Bigoi <bigo@crisidev.org>"]
+description = "IRC Client"
+documentation = "https://github.com/crisidev/ferro"
+readme = "README.md"
+homepage = "https://github.com/crisidev/ferro"
+repository = "https://github.com/crisidev/ferro"
+license-file = "LICENSE"
+keywords = ["irc", "chat", "terminal", "tui"]
+categories = ["command-line-utilities"]
+
+[dependencies]
