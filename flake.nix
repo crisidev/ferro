@@ -3,6 +3,10 @@
     flake-utils.url = "github:numtide/flake-utils";
     naersk.url = "github:nix-community/naersk";
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs-mozilla = {
+      url = "github:mozilla/nixpkgs-mozilla";
+      flake = false;
+    };
   };
 
   outputs =
@@ -11,36 +15,50 @@
       flake-utils,
       naersk,
       nixpkgs,
+      nixpkgs-mozilla,
     }:
     flake-utils.lib.eachDefaultSystem (
       system:
       let
         pkgs = (import nixpkgs) {
           inherit system;
-        };
 
-        naersk' = pkgs.callPackage naersk { };
-        ferro = naersk'.buildPackage {
-          src = ./.;
-        };
-      in
-      {
-        # For `nix build` & `nix run`:
-        defaultPackage = ferro;
-
-        # For `nix develop`:
-        devShell = pkgs.mkShell {
-          nativeBuildInputs = with pkgs; [
-            rustc
-            cargo
+          overlays = [
+            (import nixpkgs-mozilla)
           ];
         };
 
-        # Overlay for package usage in other Nix configurations
-        overlay = _: _: {
-          inherit ferro;
+        toolchain =
+          (pkgs.rustChannelOf {
+            rustToolchain = ./rust-toolchain.toml;
+            sha256 = "sha256-AJ6LX/Q/Er9kS15bn9iflkUwcgYqRQxiOIL2ToVAXaU=";
+          }).rust;
+        naersk' = pkgs.callPackage naersk {
+          cargo = toolchain;
+          clippy = toolchain;
+          rustc = toolchain;
+        };
+        # The rust package
+        ferro = naersk'.buildPackage {
+          src = ./.;
         };
 
+      in
+      rec {
+        # For `nix build` & `nix run`:
+        defaultPackage = ferro;
+
+        # For `nix develop` (optional, can be skipped):
+        devShell = pkgs.mkShell {
+          nativeBuildInputs = with pkgs; [
+            cargo-audit
+            cargo-nextest
+            grcov
+            llvmPackages_19.libllvm
+            rust-analyzer
+            toolchain
+          ];
+        };
       }
     );
 }
